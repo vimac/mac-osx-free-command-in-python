@@ -1,0 +1,106 @@
+#!/usr/bin/python
+
+import subprocess
+import re
+import getopt
+import sys
+
+def colorful(text, code):
+    return '\033[%dm' % code + text + '\033[0m'
+
+def showHelp():
+    print """usage: free [-b|-k|-m|-g]
+  -b,-k,-m,-g show output in Bytes, KiloBytes, MegaBytes, or GigaBytes
+  default output in KiloBytes"""
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "mkgb")
+except getopt.GetoptError:
+    print sys.argv[0] + ': invalid option ' + ' '.join(sys.argv[1:])
+    showHelp()
+    sys.exit(1)
+
+if len(opts) == 0:
+    opts = (('-k', ), )
+
+flag = opts[0][0]
+
+if flag == '-b':
+    base = 1
+elif flag == '-k':
+    base = 1024
+elif flag == '-m':
+    base = 1024 ** 2
+elif flag == '-g':
+    base = 1024 ** 3
+
+# Get process info
+ps = subprocess.Popen(['ps', '-caxm', '-orss,comm'], stdout=subprocess.PIPE).communicate()[0]
+vm = subprocess.Popen(['vm_stat'], stdout=subprocess.PIPE).communicate()[0]
+physmem = subprocess.Popen(['sysctl', '-n', 'hw.physmem'], stdout=subprocess.PIPE).communicate()[0]
+swapuse = subprocess.Popen(['sysctl', '-n', 'vm.swapusage'], stdout=subprocess.PIPE).communicate()[0]
+
+# Iterate processes
+processLines = ps.split('\n')
+sep = re.compile('[\s]+')
+rssTotal = 0 # kB
+for row in range(1,len(processLines)):
+    rowText = processLines[row].strip()
+    rowElements = sep.split(rowText)
+    rss = 0
+    try:
+        rss = float(rowElements[0]) * 1024
+    except:
+        pass
+    rssTotal += rss
+
+
+# Process vm_stat
+vmLines = vm.split('\n')
+sep = re.compile(':[\s]+')
+vmStats = {}
+for row in range(1,len(vmLines)-2):
+    rowText = vmLines[row].strip()
+    rowElements = sep.split(rowText)
+    vmStats[(rowElements[0])] = int(rowElements[1].strip('\.')) * 4096
+
+# Process physical memory
+physmem = int(physmem)
+
+# Process swap
+finder = re.compile('(\w{4,5}) = (\d*\.\d*)M')
+matches = finder.findall(swapuse)
+swap = {}
+for r in matches:
+    swap[r[0]] = int(float(r[1]) * 1024 * 1024)
+
+fill = 17
+print '%s' * 7 % (
+                    (' ').ljust(fill),
+                    colorful('total'.rjust(fill), 97),
+                    colorful('used'.rjust(fill), 93),
+                    colorful('free'.rjust(fill), 92),
+                    colorful('inactive'.rjust(fill), 94),
+                    colorful('speculative'.rjust(fill), 95),
+                    colorful('wired'.rjust(fill), 91),
+                )
+print '%s' * 7 % (
+                    'Mem:'.ljust(fill),
+                    colorful(str(physmem / base).rjust(fill), 97),
+                    colorful(str(vmStats["Pages active"] / base).rjust(fill), 93),
+                    colorful(str(vmStats["Pages free"] / base).rjust(fill), 92),
+                    colorful(str(vmStats["Pages inactive"] / base).rjust(fill), 94),
+                    colorful(str(vmStats["Pages speculative"] / base).rjust(fill), 95),
+                    colorful(str(vmStats["Pages wired down"] / base).rjust(fill), 91),
+                )
+print '%s' * 3 % (
+                    (' \033[93m+\033[0m %s, %s / \033[92m+\033[0m %s' % (colorful('speculative', 95), colorful('wired', 91), colorful('inactive', 94))),
+                    colorful(str((vmStats["Pages active"] + vmStats["Pages speculative"] + vmStats["Pages wired down"]) / base).rjust(fill), 93),
+                    colorful(str((vmStats["Pages free"] + vmStats["Pages inactive"]) / base).rjust(fill), 92)
+                )
+print colorful('%s' * 4 % (
+                    'Swap:'.ljust(fill),
+                    str(swap['total'] / base).rjust(fill),
+                    str(swap['used'] / base).rjust(fill),
+                    str(swap['free'] / base).rjust(fill)
+                ), 90)
