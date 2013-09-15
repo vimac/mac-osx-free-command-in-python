@@ -6,9 +6,11 @@ A simple python script of "free" command implementation with colorful output for
 usage
 ==============================
 
->free [-b|-k|-m|-g]
->  -b,-k,-m,-g show output in bytes, KB, MB, or GB
->  default output in KiloBytes
+<pre>
+free [-b|-k|-m|-g]
+  -b,-k,-m,-g show output in bytes, KB, MB, or GB
+  default output in KiloBytes
+</pre>
 
 screenshot
 ==============================
@@ -22,4 +24,4 @@ http://apple.stackexchange.com/questions/4286/is-there-a-mac-os-x-terminal-versi
 blog
 ==============================
 
-http://vifix.cn
+http://vifix.cn/blog/free-command-for-os-x-in-python.html
