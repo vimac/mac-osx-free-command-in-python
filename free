@@ -74,9 +74,9 @@ swap = {}
 for r in matches:
     swap[r[0]] = int(float(r[1]) * 1024 * 1024)
 
-fill = 17
+fill = 12
 print '%s' * 7 % (
-                    (' ').ljust(fill),
+                    (' ').ljust(8),
                     colorful('total'.rjust(fill), 97),
                     colorful('used'.rjust(fill), 93),
                     colorful('free'.rjust(fill), 92),
@@ -85,7 +85,7 @@ print '%s' * 7 % (
                     colorful('wired'.rjust(fill), 91),
                 )
 print '%s' * 7 % (
-                    'Mem:'.ljust(fill),
+                    'Mem:'.ljust(8),
                     colorful(str(physmem / base).rjust(fill), 97),
                     colorful(str(vmStats["Pages active"] / base).rjust(fill), 93),
                     colorful(str(vmStats["Pages free"] / base).rjust(fill), 92),
@@ -94,12 +94,12 @@ print '%s' * 7 % (
                     colorful(str(vmStats["Pages wired down"] / base).rjust(fill), 91),
                 )
 print '%s' * 3 % (
-                    (' \033[93m+\033[0m %s, %s / \033[92m+\033[0m %s' % (colorful('speculative', 95), colorful('wired', 91), colorful('inactive', 94))),
+                    (' \033[93mused\033[0m+%s+%s / \033[92mfree\033[0m+%s'.ljust(41) % (colorful('s', 95), colorful('w', 91), colorful('i', 94))),
                     colorful(str((vmStats["Pages active"] + vmStats["Pages speculative"] + vmStats["Pages wired down"]) / base).rjust(fill), 93),
                     colorful(str((vmStats["Pages free"] + vmStats["Pages inactive"]) / base).rjust(fill), 92)
                 )
 print colorful('%s' * 4 % (
-                    'Swap:'.ljust(fill),
+                    'Swap:'.ljust(8),
                     str(swap['total'] / base).rjust(fill),
                     str(swap['used'] / base).rjust(fill),
                     str(swap['free'] / base).rjust(fill)
